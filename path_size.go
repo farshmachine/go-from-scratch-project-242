@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+// GetPathSize calculates the total size of files at the given path and
+// returns it as a formatted string. If recursive is true, it descends into
+// subdirectories. If all is true, hidden files are included in the
+// calculation. If human is true, the result is formatted in a
+// human-readable form (e.g. "1.2 MB") instead of raw bytes.
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
 	fileList, err := getFileList(path, recursive)
 
