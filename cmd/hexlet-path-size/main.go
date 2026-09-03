@@ -42,13 +42,13 @@ func main() {
 			all := c.Bool("all")
 			recursive := c.Bool("recursive")
 
-			result, err := code.GetPathSize(path, recursive, human, all)
+			size, err := code.GetPathSize(path, recursive, human, all)
 
 			if err != nil {
 				return err
 			}
 
-			fmt.Print(result)
+			fmt.Print(size + "\t" + path)
 
 			return nil
 		},

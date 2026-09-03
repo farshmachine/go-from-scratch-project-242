@@ -18,7 +18,7 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 
 	size := getFileListSize(filteredFileList)
 
-	return formatResult(size, path, human), nil
+	return formatResult(size, human), nil
 }
 
 func getFileList(path string, recursive bool) ([]os.FileInfo, error) {
@@ -94,9 +94,9 @@ func isFileHidden(name string) bool {
 	return strings.HasPrefix(name, ".")
 }
 
-func formatResult(bytes int64, path string, human bool) string {
+func formatResult(bytes int64, human bool) string {
 	if !human {
-		return fmt.Sprintf("%dB \t %s\n", bytes, path)
+		return fmt.Sprintf("%dB", bytes)
 	}
 
 	sizeList := [7]string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
@@ -108,12 +108,5 @@ func formatResult(bytes int64, path string, human bool) string {
 		i++
 	}
 
-	if size == float64(int64(size)) {
-		return fmt.Sprintf("%.0f%s \t %s\n", size, sizeList[i], path)
-	}
-
-	fmt.Println(path)
-
-	return fmt.Sprintf("%.2f%s \t %s\n", size, sizeList[i], path)
-
+	return fmt.Sprintf("%.1f%s", size, sizeList[i])
 }
