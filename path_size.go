@@ -105,8 +105,8 @@ func formatResult(bytes int64, human bool) string {
 	}
 
 	if !human || i == 0 {
-		return fmt.Sprintf("%dB\n", bytes)
+		return fmt.Sprintf("%dB", bytes)
 	}
 
-	return fmt.Sprintf("%.1f%s\n", size, sizeList[i])
+	return fmt.Sprintf("%.1f%s", size, sizeList[i])
 }
