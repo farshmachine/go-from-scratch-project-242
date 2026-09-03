@@ -95,10 +95,6 @@ func isFileHidden(name string) bool {
 }
 
 func formatResult(bytes int64, human bool) string {
-	if !human {
-		return fmt.Sprintf("%dB", bytes)
-	}
-
 	sizeList := [7]string{"B", "KB", "MB", "GB", "TB", "PB", "EB"}
 	size := float64(bytes)
 	i := 0
@@ -108,5 +104,9 @@ func formatResult(bytes int64, human bool) string {
 		i++
 	}
 
-	return fmt.Sprintf("%.1f%s", size, sizeList[i])
+	if !human || i == 0 {
+		return fmt.Sprintf("%dB\n", bytes)
+	}
+
+	return fmt.Sprintf("%.1f%s\n", size, sizeList[i])
 }
