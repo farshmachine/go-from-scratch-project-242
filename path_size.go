@@ -2,6 +2,7 @@ package code
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,37 +27,34 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 	return formatResult(size, human), nil
 }
 
-func getFileList(path string, recursive bool) ([]os.FileInfo, error) {
+func getFileList(dir string, recursive bool) ([]os.FileInfo, error) {
 	fileList := []os.FileInfo{}
 
-	fileInfo, err := os.Lstat(path)
+	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !isInnerPath(path) {
+			return nil
+		}
+
+		if recursive && info.IsDir() {
+			innerFileList, _ := getFileList(info.Name(), recursive)
+			fileList = append(fileList, innerFileList...)
+			return nil
+		}
+
+		if info.IsDir() {
+			return filepath.SkipDir
+		}
+
+		fileList = append(fileList, info)
+		return nil
+	})
 
 	if err != nil {
 		return []os.FileInfo{}, nil
-	}
-
-	if !fileInfo.IsDir() {
-		return append(fileList, fileInfo), nil
-	}
-
-	dirEntryList, err := os.ReadDir(path)
-
-	for _, entry := range dirEntryList {
-		if !entry.IsDir() {
-			fileInfo, err := entry.Info()
-
-			if err != nil {
-				return []os.FileInfo{}, err
-			}
-
-			fileList = append(fileList, fileInfo)
-		}
-
-		if recursive && entry.IsDir() {
-			dirPath := filepath.Join(path, entry.Name())
-			innerFileList, _ := getFileList(dirPath, recursive)
-			fileList = append(fileList, innerFileList...)
-		}
 	}
 
 	return fileList, nil
@@ -97,6 +95,10 @@ func getFileSize(file os.FileInfo) int64 {
 
 func isFileHidden(name string) bool {
 	return strings.HasPrefix(name, ".")
+}
+
+func isInnerPath(path string) bool {
+	return strings.Contains(path, "/")
 }
 
 func formatResult(bytes int64, human bool) string {
