@@ -1,6 +1,7 @@
 package code
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -14,6 +15,10 @@ import (
 // calculation. If human is true, the result is formatted in a
 // human-readable form (e.g. "1.2 MB") instead of raw bytes.
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
+	if path == "" {
+		return "", errors.New("Path is not provided")
+	}
+
 	fileList, err := getFileList(path, recursive)
 
 	if err != nil {
