@@ -3,7 +3,6 @@ package code
 import (
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,7 +14,6 @@ import (
 // calculation. If human is true, the result is formatted in a
 // human-readable form (e.g. "1.2 MB") instead of raw bytes.
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
-	fmt.Println(path)
 	if path == "" {
 		return "", errors.New("Path is not provided")
 	}
@@ -34,37 +32,59 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 }
 
 func getFileList(dir string, recursive bool) ([]os.FileInfo, error) {
-	fileList := []os.FileInfo{}
+	if recursive {
+		return walkRecursive(dir)
+	}
 
-	err := filepath.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+	return walkShallow(dir)
+}
+
+func walkRecursive(root string) ([]os.FileInfo, error) {
+	filePathList := []os.FileInfo{}
+
+	err := filepath.WalkDir(root, func(path string, entry os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !isInnerPath(path) {
-			return nil
+		if !entry.IsDir() {
+			info, err := entry.Info()
+
+			if err != nil {
+				return err
+			}
+
+			filePathList = append(filePathList, info)
 		}
 
-		if recursive && info.IsDir() {
-			innerFileList, _ := getFileList(info.Name(), recursive)
-			fileList = append(fileList, innerFileList...)
-			return nil
-		}
-
-		if info.IsDir() {
-			return filepath.SkipDir
-		}
-
-		fileList = append(fileList, info)
 		return nil
 	})
 
+	return filePathList, err
+}
+
+func walkShallow(root string) ([]os.FileInfo, error) {
+	entryList, err := os.ReadDir(root)
+
 	if err != nil {
-		return []os.FileInfo{}, nil
+		return nil, err
 	}
 
-	return fileList, nil
+	var files []os.FileInfo
 
+	for _, entry := range entryList {
+		if !entry.IsDir() {
+			info, err := entry.Info()
+
+			if err != nil {
+				return nil, err
+			}
+
+			files = append(files, info)
+		}
+	}
+
+	return files, nil
 }
 
 func filterFileList(fileList []os.FileInfo, includeHidden bool) []os.FileInfo {
