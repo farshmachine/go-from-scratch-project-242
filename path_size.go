@@ -32,6 +32,16 @@ func GetPathSize(path string, recursive, human, all bool) (string, error) {
 }
 
 func getFileList(dir string, recursive bool) ([]os.FileInfo, error) {
+	info, err := os.Stat(dir)
+
+	if err != nil {
+		return nil, fmt.Errorf("Can't get info about %s: %w", dir, err)
+	}
+
+	if !info.IsDir() {
+		return []os.FileInfo{info}, nil
+	}
+
 	if recursive {
 		return walkRecursive(dir)
 	}
